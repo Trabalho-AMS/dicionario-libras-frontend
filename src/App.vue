@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import StatusApi from './components/StatusApi.vue'
 </script>
