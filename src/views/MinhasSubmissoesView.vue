@@ -9,12 +9,11 @@ import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import DetalheSubmissao from '@/components/DetalheSubmissao.vue'
 import CabecalhoPagina from '@/components/ui/CabecalhoPagina.vue'
-import CartaoIndicador from '@/components/ui/CartaoIndicador.vue'
 import EstadoVazio from '@/components/ui/EstadoVazio.vue'
 import EtiquetaStatus from '@/components/ui/EtiquetaStatus.vue'
 import { formatarData, nomeRegiao } from '@/data/status'
 import { submissoesApi } from '@/services/api'
-import type { StatusSubmissao, Submissao } from '@/types/api'
+import type { Submissao } from '@/types/api'
 
 const toast = useToast()
 const confirmar = useConfirm()
@@ -24,7 +23,6 @@ const submissoes = ref<Submissao[]>([])
 const carregando = ref(true)
 const selecionada = ref<Submissao | null>(null)
 
-const contar = (status: StatusSubmissao) => submissoes.value.filter((s) => s.status === status).length
 const podeEditar = (s: Submissao) => s.status === 'EM_ANALISE' || s.status === 'AJUSTE_SOLICITADO'
 const podeExcluir = (s: Submissao) => s.status !== 'APROVADA'
 const visivel = computed({
@@ -37,7 +35,7 @@ const visivel = computed({
 async function carregar() {
   carregando.value = true
   try {
-    submissoes.value = await submissoesApi.minhas()
+    submissoes.value = await submissoesApi.listar()
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Erro ao carregar', detail: (e as Error).message, life: 5000 })
   } finally {
@@ -69,25 +67,17 @@ onMounted(carregar)
 </script>
 
 <template>
-  <CabecalhoPagina titulo="Minhas submissões" descricao="Acompanhe o status dos sinais que você enviou.">
+  <CabecalhoPagina titulo="Minhas submissões" descricao="Os sinais que você enviou com vídeo para o dicionário.">
     <template #acoes>
       <RouterLink to="/enviar-sinal"><Button label="Enviar sinal" icon="pi pi-plus" /></RouterLink>
     </template>
   </CabecalhoPagina>
-
-  <div class="indicadores">
-    <CartaoIndicador rotulo="Em análise" :valor="contar('EM_ANALISE')" icone="pi pi-clock" cor="primaria" />
-    <CartaoIndicador rotulo="Ajuste solicitado" :valor="contar('AJUSTE_SOLICITADO')" icone="pi pi-pencil" cor="alerta" />
-    <CartaoIndicador rotulo="Aprovadas" :valor="contar('APROVADA')" icone="pi pi-check" cor="destaque" />
-    <CartaoIndicador rotulo="Rejeitadas" :valor="contar('REJEITADA')" icone="pi pi-times" cor="perigo" />
-  </div>
 
   <div class="cartao tabela">
     <DataTable :value="submissoes" data-key="id" :loading="carregando" row-hover @row-click="selecionada = $event.data">
       <Column header="Palavra">
         <template #body="{ data }">
           <strong>{{ data.sinal.verbete.palavra }}</strong>
-          <p v-if="data.status === 'AJUSTE_SOLICITADO'" class="pedido"><i class="pi pi-comment" aria-hidden="true" /> {{ data.justificativa }}</p>
         </template>
       </Column>
       <Column header="Região">
@@ -103,13 +93,13 @@ onMounted(carregar)
         <template #body="{ data }">
           <div class="acoes" @click.stop>
             <Button icon="pi pi-eye" text rounded severity="secondary" :aria-label="`Ver ${data.sinal.verbete.palavra}`" @click="selecionada = data" />
-            <Button v-if="podeEditar(data)" icon="pi pi-pencil" text rounded severity="secondary" :aria-label="`Corrigir ${data.sinal.verbete.palavra}`" @click="router.push(`/submissoes/${data.id}/editar`)" />
+            <Button v-if="podeEditar(data)" icon="pi pi-pencil" text rounded severity="secondary" :aria-label="`Editar ${data.sinal.verbete.palavra}`" @click="router.push(`/submissoes/${data.id}/editar`)" />
             <Button v-if="podeExcluir(data)" icon="pi pi-trash" text rounded severity="danger" :aria-label="`Excluir ${data.sinal.verbete.palavra}`" @click="excluir(data)" />
           </div>
         </template>
       </Column>
       <template #empty>
-        <EstadoVazio icone="pi pi-inbox" titulo="Você ainda não enviou nenhum sinal" descricao="Suas submissões e a justificativa do curador aparecem aqui.">
+        <EstadoVazio icone="pi pi-inbox" titulo="Você ainda não enviou nenhum sinal" descricao="Os sinais que você enviar aparecem aqui, e você pode ver, editar ou excluir cada um.">
           <RouterLink to="/enviar-sinal"><Button label="Enviar o primeiro sinal" icon="pi pi-plus" /></RouterLink>
         </EstadoVazio>
       </template>
@@ -121,19 +111,13 @@ onMounted(carregar)
     <template #footer>
       <template v-if="selecionada">
         <Button v-if="podeExcluir(selecionada)" label="Excluir" icon="pi pi-trash" severity="danger" text @click="excluir(selecionada)" />
-        <Button v-if="podeEditar(selecionada)" label="Corrigir" icon="pi pi-pencil" @click="router.push(`/submissoes/${selecionada.id}/editar`)" />
+        <Button v-if="podeEditar(selecionada)" label="Editar" icon="pi pi-pencil" @click="router.push(`/submissoes/${selecionada.id}/editar`)" />
       </template>
     </template>
   </Dialog>
 </template>
 
 <style scoped>
-.indicadores {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-}
 .tabela {
   padding: 0.5rem;
   overflow: hidden;
@@ -141,18 +125,8 @@ onMounted(carregar)
 :deep(.p-datatable-tbody > tr) {
   cursor: pointer;
 }
-.pedido {
-  margin: 0.25rem 0 0;
-  font-size: 0.8125rem;
-  color: #b45309;
-}
 .acoes {
   display: flex;
   gap: 0.125rem;
-}
-@media (max-width: 960px) {
-  .indicadores {
-    grid-template-columns: 1fr 1fr;
-  }
 }
 </style>

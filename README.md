@@ -46,30 +46,21 @@ O `Dockerfile` gera o build de produção e serve a SPA com Nginx (`nginx.conf`)
 container `backend`. Para subir o sistema completo, use o `docker-compose.yml` do
 [repositório principal](https://github.com/Trabalho-AMS/dicionario-libras#como-rodar-o-sistema-completo-docker).
 
-## Usuário de demonstração
-
-O protótipo ainda não tem login. No topo da tela, escolha um dos usuários de demonstração: um
-**colaborador** envia e acompanha sinais; um **curador** vê também a área de Gestão e a fila da curadoria.
-O id escolhido vai no cabeçalho `X-Usuario-Id` de todas as chamadas (`src/services/api.ts`).
-
 ## Estrutura
 
 ```
 src/
 ├── assets/       # estilos globais
-├── components/   # componentes compartilhados (player, gravador de webcam, mapa de variações...)
+├── components/   # componentes compartilhados (layout, detalhe da submissão, estados vazios...)
 ├── router/       # rotas da SPA
 ├── services/     # api.ts — único ponto de comunicação com o backend
-├── stores/       # estado global (Pinia): sessão (usuário atual) e tabelas de apoio
+├── stores/       # estado global (Pinia): tabelas de apoio
 ├── types/        # tipos das respostas da API
 └── views/        # páginas
 ```
 
 | Página | Rota |
 |---|---|
-| Busca | `/` |
-| Verbete | `/verbetes/:id` |
-| Enviar sinal | `/enviar-sinal` |
-| Minhas submissões | `/minhas-submissoes` |
-| Curadoria | `/curadoria` |
-| Administração | `/administracao` |
+| Minhas submissões (listar, ver e excluir) | `/` |
+| Enviar sinal (criar) | `/enviar-sinal` |
+| Editar submissão | `/submissoes/:id/editar` |

@@ -91,7 +91,7 @@ onMounted(async () => {
     previaVideo.value = s.video.url
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Não foi possível abrir a submissão', detail: (e as Error).message, life: 5000 })
-    router.push('/minhas-submissoes')
+    router.push('/')
   } finally {
     carregando.value = false
   }
@@ -163,18 +163,13 @@ async function enviar() {
   enviando.value = true
   try {
     if (idEdicao.value) {
-      const s = await submissoesApi.alterar(idEdicao.value, form)
-      toast.add({
-        severity: 'success',
-        summary: 'Submissão atualizada',
-        detail: s.status === 'EM_ANALISE' ? 'Ela está na fila da curadoria.' : undefined,
-        life: 4000,
-      })
+      await submissoesApi.alterar(idEdicao.value, form)
+      toast.add({ severity: 'success', summary: 'Submissão atualizada', life: 4000 })
     } else {
       await submissoesApi.criar(form)
-      toast.add({ severity: 'success', summary: 'Sinal enviado!', detail: 'A submissão está Em análise pela curadoria.', life: 5000 })
+      toast.add({ severity: 'success', summary: 'Sinal enviado!', detail: 'A submissão está Em análise.', life: 5000 })
     }
-    router.push('/minhas-submissoes')
+    router.push('/')
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Não foi possível enviar', detail: (e as Error).message, life: 6000 })
   } finally {
@@ -188,10 +183,10 @@ const mostrarErro = (campo: Campo) => tentouEnviar.value && !!erros.value[campo]
 
 <template>
   <CabecalhoPagina
-    :titulo="editando ? 'Corrigir submissão' : 'Enviar novo sinal'"
+    :titulo="editando ? 'Editar submissão' : 'Enviar novo sinal'"
     :descricao="
       editando
-        ? 'Ajuste o que a curadoria pediu. Se quiser, envie um novo vídeo; senão, o atual é mantido.'
+        ? 'Altere os campos do sinal. Se quiser, envie um novo vídeo; senão, o atual é mantido.'
         : 'Preencha o verbete, escolha a região e envie o vídeo. Um curador vai revisar antes da publicação.'
     "
   />
@@ -199,10 +194,6 @@ const mostrarErro = (campo: Campo) => tentouEnviar.value && !!erros.value[campo]
   <div v-if="carregando" class="carregando"><ProgressSpinner style="width: 40px; height: 40px" /></div>
 
   <template v-else>
-    <Message v-if="original?.justificativa" severity="warn" class="aviso-ajuste">
-      <strong>Pedido da curadoria:</strong> {{ original.justificativa }}
-    </Message>
-
     <ol class="passos" aria-label="Etapas do envio">
       <li><span>1</span> Verbete</li>
       <li><span>2</span> Sinal e região</li>
@@ -309,11 +300,10 @@ const mostrarErro = (campo: Campo) => tentouEnviar.value && !!erros.value[campo]
       </section>
 
       <div class="rodape-form">
-        <p v-if="editando"><i class="pi pi-info-circle" aria-hidden="true" /> Depois de salvar, a submissão volta para a fila da curadoria.</p>
-        <p v-else><i class="pi pi-info-circle" aria-hidden="true" /> A submissão fica <strong>Em análise</strong> até a decisão do curador.</p>
+        <p><i class="pi pi-info-circle" aria-hidden="true" /> A submissão fica <strong>Em análise</strong> até a revisão do curador.</p>
         <div class="botoes">
-          <Button v-if="editando" label="Cancelar" severity="secondary" text @click="router.push('/minhas-submissoes')" />
-          <Button type="submit" :label="editando ? 'Salvar e reenviar' : 'Enviar para curadoria'" icon="pi pi-send" size="large" :loading="enviando" />
+          <Button v-if="editando" label="Cancelar" severity="secondary" text @click="router.push('/')" />
+          <Button type="submit" :label="editando ? 'Salvar alterações' : 'Enviar sinal'" icon="pi pi-send" size="large" :loading="enviando" />
         </div>
       </div>
     </form>
@@ -325,10 +315,6 @@ const mostrarErro = (campo: Campo) => tentouEnviar.value && !!erros.value[campo]
   display: grid;
   place-items: center;
   padding: 4rem;
-}
-.aviso-ajuste {
-  max-width: 880px;
-  margin-bottom: 1.25rem;
 }
 .botoes {
   display: flex;

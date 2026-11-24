@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import PlayerSinal from './PlayerSinal.vue'
 import EtiquetaStatus from './ui/EtiquetaStatus.vue'
 import { formatarData, nomeRegiao } from '@/data/status'
 import type { Submissao } from '@/types/api'
@@ -9,20 +8,12 @@ defineProps<{ submissao: Submissao }>()
 
 <template>
   <div class="detalhe">
-    <PlayerSinal :url="submissao.video.url" :descricao="`Sinal de ${submissao.sinal.verbete.palavra}`" />
+    <video :src="submissao.video.url" controls muted loop playsinline :aria-label="`Vídeo do sinal de ${submissao.sinal.verbete.palavra}`" />
 
     <div class="info">
       <div class="topo">
         <h3>{{ submissao.sinal.verbete.palavra }}</h3>
         <EtiquetaStatus :status="submissao.status" />
-      </div>
-
-      <div v-if="submissao.justificativa" class="justificativa" role="note">
-        <i class="pi pi-comment" aria-hidden="true" />
-        <div>
-          <strong>Justificativa da curadoria</strong>
-          <p>{{ submissao.justificativa }}</p>
-        </div>
       </div>
 
       <dl>
@@ -46,10 +37,6 @@ defineProps<{ submissao: Submissao }>()
         <dd>{{ submissao.video.formato.toUpperCase() }} · {{ submissao.video.duracaoSeg }} s · {{ submissao.video.tamanhoMB.toFixed(1) }} MB</dd>
         <dt>Enviada por</dt>
         <dd>{{ submissao.autor.nome }} em {{ formatarData(submissao.dataEnvio) }}</dd>
-        <template v-if="submissao.curador">
-          <dt>Avaliada por</dt>
-          <dd>{{ submissao.curador.nome }}</dd>
-        </template>
         <dt>Consentimento</dt>
         <dd>
           Termo v{{ submissao.consentimento.versaoTermo }} aceito em {{ formatarData(submissao.consentimento.dataHora) }}
@@ -76,21 +63,12 @@ defineProps<{ submissao: Submissao }>()
 h3 {
   font-size: 1.35rem;
 }
-.justificativa {
-  display: flex;
-  gap: 0.75rem;
-  padding: 0.875rem 1rem;
-  margin-bottom: 1rem;
+video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
   border-radius: 12px;
-  background: rgb(245 158 11 / 0.12);
-  font-size: 0.9rem;
-}
-.justificativa i {
-  color: #d97706;
-  margin-top: 3px;
-}
-.justificativa p {
-  margin: 0.15rem 0 0;
+  background: #0b1120;
+  object-fit: contain;
 }
 dl {
   display: grid;

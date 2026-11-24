@@ -1,34 +1,17 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import Button from 'primevue/button'
 import ConfirmDialog from 'primevue/confirmdialog'
 import Drawer from 'primevue/drawer'
-import Select from 'primevue/select'
 import Toast from 'primevue/toast'
 import AppSidebar from './components/layout/AppSidebar.vue'
 import { useTema } from './composables/useTema'
-import { useSessaoStore } from './stores/sessao'
 
 const { escuro, alternar } = useTema()
 const menuAberto = ref(false)
 const rota = useRoute()
-const secao = computed(() => (rota.meta.secao as string | undefined) ?? 'Dicionário')
 const pagina = computed(() => (rota.meta.titulo as string | undefined) ?? '')
-
-const sessao = useSessaoStore()
-onMounted(() => sessao.carregar())
-
-const PERFIS = { COLABORADOR: 'Colaborador', CURADOR: 'Curador', ADMINISTRADOR: 'Administrador' } as const
-const opcoesUsuario = computed(() =>
-  sessao.usuarios.map((u) => ({ id: u.id, nome: u.nome, perfil: PERFIS[u.perfil] })),
-)
-const iniciais = (nome: string) =>
-  nome
-    .split(' ')
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join('')
 </script>
 
 <template>
@@ -57,7 +40,7 @@ const iniciais = (nome: string) =>
           @click="menuAberto = true"
         />
         <nav class="trilha" aria-label="Você está em">
-          <span>{{ secao }}</span>
+          <span>Submissões</span>
           <i class="pi pi-angle-right" aria-hidden="true" />
           <strong>{{ pagina }}</strong>
         </nav>
@@ -70,40 +53,11 @@ const iniciais = (nome: string) =>
             :aria-label="escuro ? 'Usar tema claro' : 'Usar tema escuro'"
             @click="alternar()"
           />
-          <Select
-            v-if="sessao.usuarios.length"
-            :model-value="sessao.usuarioId"
-            :options="opcoesUsuario"
-            option-label="nome"
-            option-value="id"
-            class="seletor-usuario"
-            aria-label="Entrar como (usuário de demonstração)"
-            @update:model-value="sessao.trocar"
-          >
-            <template #value="{ value }">
-              <span v-if="sessao.usuario && value" class="usuario">
-                <span class="avatar" aria-hidden="true">{{ iniciais(sessao.usuario.nome) }}</span>
-                <span class="usuario-texto">
-                  <strong>{{ sessao.usuario.nome }}</strong>
-                  <small>{{ PERFIS[sessao.usuario.perfil] }}</small>
-                </span>
-              </span>
-            </template>
-            <template #option="{ option }">
-              <span class="usuario">
-                <span class="avatar" aria-hidden="true">{{ iniciais(option.nome) }}</span>
-                <span class="usuario-texto">
-                  <strong>{{ option.nome }}</strong>
-                  <small>{{ option.perfil }}</small>
-                </span>
-              </span>
-            </template>
-          </Select>
         </div>
       </header>
 
       <main id="conteudo">
-        <RouterView :key="sessao.usuarioId ?? ''" />
+        <RouterView />
       </main>
     </div>
   </div>
@@ -173,40 +127,6 @@ const iniciais = (nome: string) =>
   align-items: center;
   gap: 0.5rem;
 }
-.seletor-usuario {
-  border-radius: 999px;
-  padding-left: 0.25rem;
-}
-.usuario {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-}
-.usuario-texto {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-}
-.usuario-texto strong {
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-.usuario-texto small {
-  font-size: 0.72rem;
-  color: var(--texto-suave);
-}
-.avatar {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--gradiente-marca);
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 700;
-  flex-shrink: 0;
-}
 main {
   padding: 2rem;
   max-width: 1200px;
@@ -225,8 +145,7 @@ main {
   .topo {
     padding: 0 1rem;
   }
-  .trilha,
-  .seletor-usuario .usuario-texto {
+  .trilha {
     display: none;
   }
   main {

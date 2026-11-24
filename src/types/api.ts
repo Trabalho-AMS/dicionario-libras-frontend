@@ -1,13 +1,12 @@
 // Tipos das respostas da API (espelham os records do backend).
 
-export type Perfil = 'COLABORADOR' | 'CURADOR' | 'ADMINISTRADOR'
 export type StatusSubmissao = 'EM_ANALISE' | 'AJUSTE_SOLICITADO' | 'APROVADA' | 'REJEITADA'
 
 export interface Usuario {
   id: string
   nome: string
   email: string
-  perfil: Perfil
+  perfil: string
 }
 
 export interface ItemApoio {
@@ -62,17 +61,10 @@ export interface Submissao {
   id: string
   status: StatusSubmissao
   dataEnvio: string
-  justificativa: string | null
   autor: Usuario
-  curador: Usuario | null
   sinal: SinalResumo
   video: VideoResumo
   consentimento: ConsentimentoResumo
-}
-
-export interface VerbetePublicado {
-  verbete: VerbeteResumo
-  sinais: { sinal: SinalResumo; video: VideoResumo }[]
 }
 
 /** Campos do formulário de envio/alteração de sinal. */
