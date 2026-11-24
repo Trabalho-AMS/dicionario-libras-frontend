@@ -40,6 +40,12 @@ npm run build   # checagem de tipos + build de produção em dist/
 npm run lint    # lint
 ```
 
+### Docker
+
+O `Dockerfile` gera o build de produção e serve a SPA com Nginx (`nginx.conf`), que repassa `/api` para o
+container `backend`. Para subir o sistema completo, use o `docker-compose.yml` do
+[repositório principal](https://github.com/Trabalho-AMS/dicionario-libras#como-rodar-o-sistema-completo-docker).
+
 ## Estrutura
 
 ```
