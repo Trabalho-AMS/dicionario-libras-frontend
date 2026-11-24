@@ -4,6 +4,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+# A chave da licença PrimeUI entra no build (ver .env.example)
+ARG VITE_PRIMEUI_LICENSE=
+ENV VITE_PRIMEUI_LICENSE=$VITE_PRIMEUI_LICENSE
 RUN npm run build
 
 # Etapa 2: Nginx serve os arquivos e repassa /api para o backend

@@ -1,17 +1,36 @@
+/* Tokens visuais. As cores combinam com o tema do PrimeVue (src/theme.ts): índigo + verde-água sobre slate. */
 :root {
-  --cor-fundo: #ffffff;
-  --cor-texto: #1a1a1a;
-  --cor-borda: #d0d0d0;
-  --cor-link: #0b5394;
+  --fundo: #f6f7fb;
+  --superficie: #ffffff;
+  --superficie-suave: #f1f5f9;
+  --borda: #e2e8f0;
+  --texto: #0f172a;
+  --texto-suave: #64748b;
+  --primaria: #4f46e5;
+  --primaria-suave: #eef2ff;
+  --destaque: #0d9488;
+  --destaque-suave: #ccfbf1;
+  --gradiente-marca: linear-gradient(135deg, #4f46e5 0%, #0d9488 100%);
+  --sombra: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
+  --sombra-alta: 0 10px 30px -12px rgb(15 23 42 / 0.18);
+  --raio: 14px;
+  --largura-sidebar: 264px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --cor-fundo: #121212;
-    --cor-texto: #f0f0f0;
-    --cor-borda: #3a3a3a;
-    --cor-link: #8ab4f8;
-  }
+html.app-dark {
+  --fundo: #0b1120;
+  --superficie: #111827;
+  --superficie-suave: #1e293b;
+  --borda: #1f2a3d;
+  --texto: #e2e8f0;
+  --texto-suave: #94a3b8;
+  --primaria: #818cf8;
+  --primaria-suave: rgb(99 102 241 / 0.14);
+  --destaque: #2dd4bf;
+  --destaque-suave: rgb(45 212 191 / 0.12);
+  --sombra: 0 1px 2px rgb(0 0 0 / 0.3);
+  --sombra-alta: 0 10px 30px -12px rgb(0 0 0 / 0.6);
+  color-scheme: dark;
 }
 
 *,
@@ -22,23 +41,89 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
   line-height: 1.6;
-  background: var(--cor-fundo);
-  color: var(--cor-texto);
+  background: var(--fundo);
+  color: var(--texto);
+  -webkit-font-smoothing: antialiased;
 }
 
-#app {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 1rem;
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  margin: 0;
 }
 
 a {
-  color: var(--cor-link);
+  color: var(--primaria);
+  text-decoration: none;
 }
 
 :focus-visible {
-  outline: 3px solid var(--cor-link);
+  outline: 3px solid var(--primaria);
   outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Cartão padrão das páginas */
+.cartao {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  padding: 1.5rem;
+}
+
+.cartao-titulo {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.cartao-subtitulo {
+  color: var(--texto-suave);
+  font-size: 0.875rem;
+  margin: 0 0 1.25rem;
+}
+
+.grade {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.campo label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.campo .dica {
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
+}
+
+.campo .erro {
+  color: #dc2626;
+  font-size: 0.8125rem;
+}
+
+html.app-dark .campo .erro {
+  color: #f87171;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
