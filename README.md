@@ -9,6 +9,16 @@ trabalho final de AMS0002 (UDESC). Backend: [dicionario-libras-backend](https://
 - Vue Router
 - Pinia
 
+## Bibliotecas
+
+| Biblioteca | Para quê |
+|---|---|
+| [PrimeVue](https://primevue.org/) + PrimeIcons | Componentes prontos e acessíveis (tabelas, formulários, diálogos, upload), tema Aura com modo escuro automático |
+| [Axios](https://axios-http.com/) | Cliente HTTP, configurado em `src/services/api.ts` |
+| [VeeValidate](https://vee-validate.logaretm.com/) + [Zod](https://zod.dev/) | Validação de formulários com esquemas tipados (`toTypedSchema` de `@vee-validate/zod`) |
+| [VueUse](https://vueuse.org/) | Composables prontos, ex.: `useUserMedia` para gravar o sinal pela webcam |
+| [Vitest](https://vitest.dev/) + Vue Test Utils | Testes de unidade dos componentes (`src/**/__tests__/*.spec.ts`) |
+
 ## Como rodar
 
 Requer Node.js 22.18+ e o backend rodando em `http://localhost:8080`.
@@ -25,6 +35,7 @@ e ajuste `VITE_API_URL`.
 Outros comandos:
 
 ```bash
+npm run test:unit  # testes (Vitest)
 npm run build   # checagem de tipos + build de produção em dist/
 npm run lint    # lint
 ```

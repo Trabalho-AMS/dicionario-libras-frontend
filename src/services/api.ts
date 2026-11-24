@@ -1,34 +1,18 @@
+import axios from 'axios'
+
 // Único ponto de comunicação com o backend.
-const BASE_URL: string = import.meta.env.VITE_API_URL ?? '/api'
+export const http = axios.create({
+  baseURL: import.meta.env.VITE_API_URL ?? '/api',
+})
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const isFormData = options.body instanceof FormData
-  const response = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-      ...options.headers,
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error(`Erro ${response.status} ao acessar ${path}`)
-  }
-
-  return (response.status === 204 ? null : await response.json()) as T
-}
-
-export const api = {
-  get: <T>(path: string) => request<T>(path),
-  post: <T>(path: string, body: unknown) =>
-    request<T>(path, {
-      method: 'POST',
-      body: body instanceof FormData ? body : JSON.stringify(body),
-    }),
-  put: <T>(path: string, body: unknown) =>
-    request<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
-  delete: <T = null>(path: string) => request<T>(path, { method: 'DELETE' }),
-}
+http.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status
+    const url = error.config?.url
+    return Promise.reject(new Error(status ? `Erro ${status} ao acessar ${url}` : 'Não foi possível conectar à API'))
+  },
+)
 
 export interface StatusResposta {
   status: string
@@ -36,5 +20,5 @@ export interface StatusResposta {
 }
 
 export const statusApi = {
-  verificar: () => api.get<StatusResposta>('/status'),
+  verificar: async () => (await http.get<StatusResposta>('/status')).data,
 }
