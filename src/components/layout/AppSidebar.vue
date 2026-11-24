@@ -1,11 +1,15 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import MarcaLogo from './MarcaLogo.vue'
 import StatusApi from '../StatusApi.vue'
+import { useSessaoStore } from '@/stores/sessao'
 
 defineEmits<{ navegou: [] }>()
 
-const grupos = [
+const sessao = useSessaoStore()
+
+const todosOsGrupos = [
   {
     titulo: 'Dicionário',
     itens: [{ rota: '/', rotulo: 'Buscar sinais', icone: 'pi pi-search' }],
@@ -19,12 +23,16 @@ const grupos = [
   },
   {
     titulo: 'Gestão',
+    apenasCurador: true,
     itens: [
       { rota: '/curadoria', rotulo: 'Curadoria', icone: 'pi pi-verified' },
       { rota: '/administracao', rotulo: 'Administração', icone: 'pi pi-cog' },
     ],
   },
 ]
+
+// A área de gestão só aparece para curadores e administradores
+const grupos = computed(() => todosOsGrupos.filter((g) => !g.apenasCurador || sessao.ehCurador))
 </script>
 
 <template>

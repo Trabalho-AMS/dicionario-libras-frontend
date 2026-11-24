@@ -1,23 +1,51 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { watchDebounced } from '@vueuse/core'
 import Button from 'primevue/button'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
+import Skeleton from 'primevue/skeleton'
+import Tag from 'primevue/tag'
 import EstadoVazio from '@/components/ui/EstadoVazio.vue'
-import { ASSUNTOS, CONFIGURACOES_MAO, REGIOES } from '@/data/apoio'
+import { dicionarioApi } from '@/services/api'
+import { useApoioStore } from '@/stores/apoio'
+import type { VerbetePublicado } from '@/types/api'
 
-// No filtro, "vazio" significa todas as regiões; o padrão nacional vira uma opção própria
-const opcoesRegiao = [{ uf: 'NACIONAL', nome: 'Somente sinal nacional' }, ...REGIOES.filter((r) => r.uf)]
+const apoioStore = useApoioStore()
 
 const termo = ref('')
-const regiao = ref<string | null>(null)
-const assunto = ref<string | null>(null)
-const configuracao = ref<string | null>(null)
+const regiao = ref<number | 'NACIONAL' | null>(null)
+const assunto = ref<number | null>(null)
+const configuracao = ref<number | null>(null)
 const letra = ref<string | null>(null)
 const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+
+const resultados = ref<VerbetePublicado[]>([])
+const carregando = ref(true)
+const erro = ref<string | null>(null)
+
+// No filtro, "vazio" significa todas as regiões; o padrão nacional vira uma opção própria
+const opcoesRegiao = computed(() => [
+  { id: 'NACIONAL', nome: 'Somente sinal nacional' },
+  ...apoioStore.apoio.regioes.map((r) => ({ id: r.id, nome: `${r.nome} (${r.codigo})` })),
+])
+
+const semAcento = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase()
+
+/** Região, assunto, configuração de mão e letra filtram os resultados da busca. */
+const filtrados = computed(() =>
+  resultados.value.filter(({ verbete, sinais }) => {
+    if (assunto.value && verbete.assunto.id !== assunto.value) return false
+    if (letra.value && !semAcento(verbete.palavra).startsWith(letra.value)) return false
+    if (regiao.value === 'NACIONAL' && !sinais.some((s) => s.sinal.padrao)) return false
+    if (typeof regiao.value === 'number' && !sinais.some((s) => s.sinal.regiao?.id === regiao.value)) return false
+    if (configuracao.value && !sinais.some((s) => s.sinal.configuracaoMao.id === configuracao.value)) return false
+    return true
+  }),
+)
 
 const recursos = [
   { icone: 'pi pi-map', titulo: 'Variações regionais', texto: 'Compare como o mesmo sinal é feito em cada estado.' },
@@ -25,10 +53,31 @@ const recursos = [
   { icone: 'pi pi-play-circle', titulo: 'Player para aprender', texto: 'Câmera lenta, repetição e espelhamento para canhotos.' },
 ]
 
+async function buscar() {
+  carregando.value = true
+  erro.value = null
+  try {
+    resultados.value = await dicionarioApi.buscar(termo.value)
+  } catch (e) {
+    erro.value = (e as Error).message
+  } finally {
+    carregando.value = false
+  }
+}
+
 function limpar() {
   termo.value = ''
   regiao.value = assunto.value = configuracao.value = letra.value = null
 }
+
+const temFiltro = computed(() => !!(termo.value || regiao.value || assunto.value || configuracao.value || letra.value))
+
+watchDebounced(termo, buscar, { debounce: 300 })
+watch(letra, () => window.scrollTo({ top: 0 }))
+onMounted(() => {
+  apoioStore.carregar()
+  buscar()
+})
 </script>
 
 <template>
@@ -37,7 +86,7 @@ function limpar() {
     <h1>Encontre o sinal certo,<br />do jeito que ele é usado onde você mora.</h1>
     <p>Busque por palavra, assunto ou configuração de mão e veja o sinal padrão e as variações de cada região.</p>
 
-    <form class="busca" role="search" @submit.prevent>
+    <form class="busca" role="search" @submit.prevent="buscar">
       <IconField class="campo-busca">
         <InputIcon class="pi pi-search" />
         <InputText v-model="termo" placeholder="Buscar uma palavra, ex.: pai, escola, obrigado" aria-label="Palavra" fluid size="large" />
@@ -54,15 +103,15 @@ function limpar() {
       </div>
       <div class="campo">
         <label for="f-regiao">Região</label>
-        <Select v-model="regiao" input-id="f-regiao" :options="opcoesRegiao" option-label="nome" option-value="uf" placeholder="Todas" show-clear filter fluid />
+        <Select v-model="regiao" input-id="f-regiao" :options="opcoesRegiao" option-label="nome" option-value="id" placeholder="Todas" show-clear filter fluid />
       </div>
       <div class="campo">
         <label for="f-assunto">Assunto</label>
-        <Select v-model="assunto" input-id="f-assunto" :options="ASSUNTOS" placeholder="Todos" show-clear fluid />
+        <Select v-model="assunto" input-id="f-assunto" :options="apoioStore.apoio.assuntos" option-label="nome" option-value="id" placeholder="Todos" show-clear fluid />
       </div>
       <div class="campo">
         <label for="f-cm">Configuração de mão</label>
-        <Select v-model="configuracao" input-id="f-cm" :options="CONFIGURACOES_MAO" placeholder="Todas" show-clear fluid />
+        <Select v-model="configuracao" input-id="f-cm" :options="apoioStore.apoio.configuracoesMao" option-label="nome" option-value="id" placeholder="Todas" show-clear fluid />
       </div>
     </aside>
 
@@ -80,11 +129,42 @@ function limpar() {
         </button>
       </div>
 
-      <div class="cartao">
+      <p v-if="!carregando && filtrados.length" class="contagem">
+        {{ filtrados.length }} {{ filtrados.length === 1 ? 'verbete encontrado' : 'verbetes encontrados' }}
+      </p>
+
+      <div v-if="carregando" class="lista">
+        <div v-for="i in 3" :key="i" class="cartao"><Skeleton width="40%" height="1.4rem" /><Skeleton class="mt" height="3rem" /></div>
+      </div>
+
+      <div v-else-if="erro" class="cartao">
+        <EstadoVazio icone="pi pi-exclamation-triangle" titulo="Não foi possível buscar" :descricao="erro">
+          <Button label="Tentar de novo" icon="pi pi-refresh" @click="buscar" />
+        </EstadoVazio>
+      </div>
+
+      <div v-else-if="filtrados.length" class="lista">
+        <RouterLink v-for="{ verbete, sinais } in filtrados" :key="verbete.id" :to="`/verbetes/${verbete.id}`" class="cartao resultado">
+          <div class="resultado-topo">
+            <h3>{{ verbete.palavra }}</h3>
+            <Tag :value="verbete.assunto.nome" severity="secondary" rounded />
+          </div>
+          <p class="acepcao">{{ verbete.acepcao }}</p>
+          <div class="sinais">
+            <span v-for="s in sinais" :key="s.sinal.id" class="chip" :class="{ nacional: s.sinal.padrao }">
+              <i :class="s.sinal.padrao ? 'pi pi-globe' : 'pi pi-map-marker'" aria-hidden="true" />
+              {{ s.sinal.padrao ? 'Nacional' : s.sinal.regiao?.codigo }}
+            </span>
+          </div>
+          <i class="pi pi-arrow-right seta" aria-hidden="true" />
+        </RouterLink>
+      </div>
+
+      <div v-else class="cartao">
         <EstadoVazio
           icone="pi pi-book"
-          titulo="Nenhum verbete publicado ainda"
-          descricao="Os verbetes aparecem aqui depois de aprovados pela curadoria. Que tal contribuir com o primeiro sinal?"
+          :titulo="temFiltro ? 'Nenhum verbete encontrado' : 'Nenhum verbete publicado ainda'"
+          :descricao="temFiltro ? 'Tente outra palavra ou limpe os filtros. Se o sinal não existir, você pode contribuir com ele.' : 'Os verbetes aparecem aqui depois de aprovados pela curadoria. Que tal contribuir com o primeiro sinal?'"
         >
           <RouterLink to="/enviar-sinal"><Button label="Enviar um sinal" icon="pi pi-plus" /></RouterLink>
         </EstadoVazio>
@@ -191,6 +271,69 @@ function limpar() {
   background: var(--primaria);
   color: #fff;
 }
+.contagem {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 0.875rem;
+}
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.mt {
+  margin-top: 0.75rem;
+}
+.resultado {
+  position: relative;
+  display: block;
+  color: var(--texto);
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.resultado:hover {
+  border-color: var(--primaria);
+  box-shadow: var(--sombra-alta);
+  transform: translateY(-1px);
+}
+.resultado-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.resultado h3 {
+  font-size: 1.15rem;
+}
+.acepcao {
+  margin: 0.375rem 0 0.75rem;
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+  padding-right: 2rem;
+}
+.sinais {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--superficie-suave);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.chip.nacional {
+  background: var(--primaria-suave);
+  color: var(--primaria);
+}
+.seta {
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  color: var(--texto-suave);
+}
 .recursos {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -212,7 +355,70 @@ function limpar() {
 }
 @media (max-width: 900px) {
   .grade-busca,
-  .recursos {
+  .contagem {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 0.875rem;
+}
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.mt {
+  margin-top: 0.75rem;
+}
+.resultado {
+  position: relative;
+  display: block;
+  color: var(--texto);
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.resultado:hover {
+  border-color: var(--primaria);
+  box-shadow: var(--sombra-alta);
+  transform: translateY(-1px);
+}
+.resultado-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.resultado h3 {
+  font-size: 1.15rem;
+}
+.acepcao {
+  margin: 0.375rem 0 0.75rem;
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+  padding-right: 2rem;
+}
+.sinais {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--superficie-suave);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.chip.nacional {
+  background: var(--primaria-suave);
+  color: var(--primaria);
+}
+.seta {
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  color: var(--texto-suave);
+}
+.recursos {
     grid-template-columns: 1fr;
   }
   .hero {

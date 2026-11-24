@@ -18,6 +18,12 @@ const router = createRouter({
       meta: { secao: 'Contribuir', titulo: 'Enviar sinal' },
     },
     {
+      path: '/submissoes/:id/editar',
+      name: 'editar-submissao',
+      component: () => import('../views/EnviarSinalView.vue'),
+      meta: { secao: 'Contribuir', titulo: 'Corrigir submissão' },
+    },
+    {
       path: '/minhas-submissoes',
       name: 'minhas-submissoes',
       component: () => import('../views/MinhasSubmissoesView.vue'),

@@ -9,12 +9,19 @@ import Tabs from 'primevue/tabs'
 import Tag from 'primevue/tag'
 import CabecalhoPagina from '@/components/ui/CabecalhoPagina.vue'
 import EstadoVazio from '@/components/ui/EstadoVazio.vue'
-import { ASSUNTOS, CONFIGURACOES_MAO, REGIOES } from '@/data/apoio'
+import { computed, onMounted } from 'vue'
+import { useApoioStore } from '@/stores/apoio'
+import { useSessaoStore } from '@/stores/sessao'
 
-const regioes = REGIOES.filter((r) => r.uf)
-const assuntos = ASSUNTOS.map((nome) => ({ nome }))
-const configuracoes = CONFIGURACOES_MAO.map((codigo) => ({ codigo }))
-const usuarios: { nome: string; email: string; perfil: string }[] = []
+const apoioStore = useApoioStore()
+const sessao = useSessaoStore()
+const regioes = computed(() => apoioStore.apoio.regioes.map((r) => ({ uf: r.codigo, nome: r.nome })))
+const assuntos = computed(() => apoioStore.apoio.assuntos)
+const configuracoes = computed(() => apoioStore.apoio.configuracoesMao.map((c) => ({ codigo: c.codigo ?? c.nome })))
+const PERFIS = { COLABORADOR: 'Colaborador', CURADOR: 'Curador', ADMINISTRADOR: 'Administrador' } as const
+const usuarios = computed(() => sessao.usuarios.map((u) => ({ ...u, perfil: PERFIS[u.perfil] })))
+
+onMounted(() => apoioStore.carregar())
 </script>
 
 <template>
