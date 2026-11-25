@@ -24,11 +24,19 @@ defineProps<{ submissao: Submissao }>()
           <dt>Exemplo</dt>
           <dd>{{ submissao.exemplo }}</dd>
         </template>
+        <template v-if="submissao.exemploLibras">
+          <dt>Exemplo em Libras</dt>
+          <dd>{{ submissao.exemploLibras }}</dd>
+        </template>
         <dt>Assunto</dt>
         <dd>{{ submissao.assunto }}</dd>
         <template v-if="submissao.classeGramatical">
           <dt>Classe gramatical</dt>
           <dd>{{ submissao.classeGramatical }}</dd>
+        </template>
+        <template v-if="submissao.origem">
+          <dt>Origem</dt>
+          <dd>{{ submissao.origem }}</dd>
         </template>
         <dt>Região</dt>
         <dd>{{ nomeRegiao(submissao.regiao) }}</dd>
@@ -37,11 +45,11 @@ defineProps<{ submissao: Submissao }>()
         <dt>Vídeo</dt>
         <dd>{{ submissao.video.formato.toUpperCase() }} · {{ submissao.video.duracaoSeg }} s · {{ submissao.video.tamanhoMB.toFixed(1) }} MB</dd>
         <dt>Enviada em</dt>
-        <dd>{{ formatarData(submissao.dataEnvio) }}<span v-if="submissao.atualizadaEm"> · editada em {{ formatarData(submissao.atualizadaEm) }}</span></dd>
+        <dd>{{ formatarData(submissao.dataEnvio) }}</dd>
         <dt>Consentimento</dt>
         <dd>
-          Termo v{{ submissao.versaoTermo }} aceito em {{ formatarData(submissao.consentimentoEm) }}
-          <span v-if="submissao.sinalizanteMenor"> · menor de 18 com termo do responsável</span>
+          Termo v{{ submissao.consentimento.versaoTermo }} aceito em {{ formatarData(submissao.consentimento.dataHora) }}
+          <span v-if="submissao.consentimento.sinalizanteMenor"> · menor de 18 com termo do responsável</span>
         </dd>
       </dl>
     </div>

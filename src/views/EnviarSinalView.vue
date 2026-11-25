@@ -36,6 +36,8 @@ const form = reactive<FormularioSubmissao>({
   classeGramatical: null,
   acepcao: '',
   exemplo: '',
+  exemploLibras: '',
+  origem: '',
   regiao: null,
   configuracaoMao: null,
   aceiteTermo: false,
@@ -75,13 +77,15 @@ onMounted(async () => {
       palavra: s.palavra,
       acepcao: s.acepcao,
       exemplo: s.exemplo ?? '',
+      exemploLibras: s.exemploLibras ?? '',
+      origem: s.origem ?? '',
       classeGramatical: s.classeGramatical,
       assunto: s.assunto,
       regiao: s.regiao,
       configuracaoMao: s.configuracaoMao,
       duracaoSeg: s.video.duracaoSeg,
       aceiteTermo: true,
-      sinalizanteMenor: s.sinalizanteMenor,
+      sinalizanteMenor: s.consentimento.sinalizanteMenor,
     })
     previaVideo.value = s.video.url
   } catch (e) {
@@ -223,6 +227,15 @@ const mostrarErro = (campo: Campo) => tentouEnviar.value && !!erros.value[campo]
           <div class="campo largura-total">
             <label for="exemplo">Exemplo de uso</label>
             <InputText id="exemplo" v-model="form.exemplo" placeholder="Ex.: Meu pai trabalha no hospital." fluid />
+          </div>
+          <div class="campo largura-total">
+            <label for="exemplo-libras">Exemplo em Libras</label>
+            <InputText id="exemplo-libras" v-model="form.exemploLibras" placeholder="Ex.: PAI MEU TRABALHAR HOSPITAL" fluid />
+            <small class="dica">A frase do exemplo na estrutura da Libras (glosa).</small>
+          </div>
+          <div class="campo">
+            <label for="origem">Origem</label>
+            <InputText id="origem" v-model="form.origem" placeholder="Ex.: Português" fluid />
           </div>
         </div>
       </section>
