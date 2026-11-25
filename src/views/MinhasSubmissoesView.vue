@@ -11,7 +11,8 @@ import DetalheSubmissao from '@/components/DetalheSubmissao.vue'
 import CabecalhoPagina from '@/components/ui/CabecalhoPagina.vue'
 import EstadoVazio from '@/components/ui/EstadoVazio.vue'
 import EtiquetaStatus from '@/components/ui/EtiquetaStatus.vue'
-import { formatarData, nomeRegiao } from '@/data/status'
+import { nomeRegiao } from '@/data/apoio'
+import { formatarData } from '@/data/status'
 import { submissoesApi } from '@/services/api'
 import type { Submissao } from '@/types/api'
 
@@ -23,8 +24,6 @@ const submissoes = ref<Submissao[]>([])
 const carregando = ref(true)
 const selecionada = ref<Submissao | null>(null)
 
-const podeEditar = (s: Submissao) => s.status === 'EM_ANALISE' || s.status === 'AJUSTE_SOLICITADO'
-const podeExcluir = (s: Submissao) => s.status !== 'APROVADA'
 const visivel = computed({
   get: () => selecionada.value !== null,
   set: (v) => {
@@ -46,7 +45,7 @@ async function carregar() {
 function excluir(s: Submissao) {
   confirmar.require({
     header: 'Excluir submissão?',
-    message: `O sinal de "${s.sinal.verbete.palavra}", o vídeo e o consentimento serão apagados. Essa ação não pode ser desfeita.`,
+    message: `O sinal de "${s.palavra}", o vídeo e o consentimento serão apagados. Essa ação não pode ser desfeita.`,
     icon: 'pi pi-trash',
     rejectProps: { label: 'Cancelar', severity: 'secondary', text: true },
     acceptProps: { label: 'Excluir', severity: 'danger' },
@@ -77,11 +76,11 @@ onMounted(carregar)
     <DataTable :value="submissoes" data-key="id" :loading="carregando" row-hover @row-click="selecionada = $event.data">
       <Column header="Palavra">
         <template #body="{ data }">
-          <strong>{{ data.sinal.verbete.palavra }}</strong>
+          <strong>{{ data.palavra }}</strong>
         </template>
       </Column>
       <Column header="Região">
-        <template #body="{ data }">{{ nomeRegiao(data.sinal.regiao) }}</template>
+        <template #body="{ data }">{{ nomeRegiao(data.regiao) }}</template>
       </Column>
       <Column header="Enviada em">
         <template #body="{ data }">{{ formatarData(data.dataEnvio) }}</template>
@@ -92,9 +91,9 @@ onMounted(carregar)
       <Column header="Ações" class="col-acoes">
         <template #body="{ data }">
           <div class="acoes" @click.stop>
-            <Button icon="pi pi-eye" text rounded severity="secondary" :aria-label="`Ver ${data.sinal.verbete.palavra}`" @click="selecionada = data" />
-            <Button v-if="podeEditar(data)" icon="pi pi-pencil" text rounded severity="secondary" :aria-label="`Editar ${data.sinal.verbete.palavra}`" @click="router.push(`/submissoes/${data.id}/editar`)" />
-            <Button v-if="podeExcluir(data)" icon="pi pi-trash" text rounded severity="danger" :aria-label="`Excluir ${data.sinal.verbete.palavra}`" @click="excluir(data)" />
+            <Button icon="pi pi-eye" text rounded severity="secondary" :aria-label="`Ver ${data.palavra}`" @click="selecionada = data" />
+            <Button icon="pi pi-pencil" text rounded severity="secondary" :aria-label="`Editar ${data.palavra}`" @click="router.push(`/submissoes/${data.id}/editar`)" />
+            <Button icon="pi pi-trash" text rounded severity="danger" :aria-label="`Excluir ${data.palavra}`" @click="excluir(data)" />
           </div>
         </template>
       </Column>
@@ -110,8 +109,8 @@ onMounted(carregar)
     <DetalheSubmissao v-if="selecionada" :submissao="selecionada" />
     <template #footer>
       <template v-if="selecionada">
-        <Button v-if="podeExcluir(selecionada)" label="Excluir" icon="pi pi-trash" severity="danger" text @click="excluir(selecionada)" />
-        <Button v-if="podeEditar(selecionada)" label="Editar" icon="pi pi-pencil" @click="router.push(`/submissoes/${selecionada.id}/editar`)" />
+        <Button label="Excluir" icon="pi pi-trash" severity="danger" text @click="excluir(selecionada)" />
+        <Button label="Editar" icon="pi pi-pencil" @click="router.push(`/submissoes/${selecionada.id}/editar`)" />
       </template>
     </template>
   </Dialog>

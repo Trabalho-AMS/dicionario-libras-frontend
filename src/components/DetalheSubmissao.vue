@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import EtiquetaStatus from './ui/EtiquetaStatus.vue'
-import { formatarData, nomeRegiao } from '@/data/status'
+import { nomeRegiao } from '@/data/apoio'
+import { formatarData } from '@/data/status'
 import type { Submissao } from '@/types/api'
 
 defineProps<{ submissao: Submissao }>()
@@ -8,39 +9,39 @@ defineProps<{ submissao: Submissao }>()
 
 <template>
   <div class="detalhe">
-    <video :src="submissao.video.url" controls muted loop playsinline :aria-label="`Vídeo do sinal de ${submissao.sinal.verbete.palavra}`" />
+    <video :src="submissao.video.url" controls muted loop playsinline :aria-label="`Vídeo do sinal de ${submissao.palavra}`" />
 
     <div class="info">
       <div class="topo">
-        <h3>{{ submissao.sinal.verbete.palavra }}</h3>
+        <h3>{{ submissao.palavra }}</h3>
         <EtiquetaStatus :status="submissao.status" />
       </div>
 
       <dl>
         <dt>Acepção</dt>
-        <dd>{{ submissao.sinal.verbete.acepcao }}</dd>
-        <template v-if="submissao.sinal.verbete.exemplo">
+        <dd>{{ submissao.acepcao }}</dd>
+        <template v-if="submissao.exemplo">
           <dt>Exemplo</dt>
-          <dd>{{ submissao.sinal.verbete.exemplo }}</dd>
+          <dd>{{ submissao.exemplo }}</dd>
         </template>
         <dt>Assunto</dt>
-        <dd>{{ submissao.sinal.verbete.assunto.nome }}</dd>
-        <template v-if="submissao.sinal.verbete.classeGramatical">
+        <dd>{{ submissao.assunto }}</dd>
+        <template v-if="submissao.classeGramatical">
           <dt>Classe gramatical</dt>
-          <dd>{{ submissao.sinal.verbete.classeGramatical }}</dd>
+          <dd>{{ submissao.classeGramatical }}</dd>
         </template>
         <dt>Região</dt>
-        <dd>{{ nomeRegiao(submissao.sinal.regiao) }}</dd>
+        <dd>{{ nomeRegiao(submissao.regiao) }}</dd>
         <dt>Configuração de mão</dt>
-        <dd>{{ submissao.sinal.configuracaoMao.codigo }}</dd>
+        <dd>{{ submissao.configuracaoMao }}</dd>
         <dt>Vídeo</dt>
         <dd>{{ submissao.video.formato.toUpperCase() }} · {{ submissao.video.duracaoSeg }} s · {{ submissao.video.tamanhoMB.toFixed(1) }} MB</dd>
-        <dt>Enviada por</dt>
-        <dd>{{ submissao.autor.nome }} em {{ formatarData(submissao.dataEnvio) }}</dd>
+        <dt>Enviada em</dt>
+        <dd>{{ formatarData(submissao.dataEnvio) }}<span v-if="submissao.atualizadaEm"> · editada em {{ formatarData(submissao.atualizadaEm) }}</span></dd>
         <dt>Consentimento</dt>
         <dd>
-          Termo v{{ submissao.consentimento.versaoTermo }} aceito em {{ formatarData(submissao.consentimento.dataHora) }}
-          <span v-if="submissao.consentimento.sinalizanteMenor"> · menor de 18 com termo do responsável</span>
+          Termo v{{ submissao.versaoTermo }} aceito em {{ formatarData(submissao.consentimentoEm) }}
+          <span v-if="submissao.sinalizanteMenor"> · menor de 18 com termo do responsável</span>
         </dd>
       </dl>
     </div>

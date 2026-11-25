@@ -2,69 +2,23 @@
 
 export type StatusSubmissao = 'EM_ANALISE' | 'AJUSTE_SOLICITADO' | 'APROVADA' | 'REJEITADA'
 
-export interface Usuario {
-  id: string
-  nome: string
-  email: string
-  perfil: string
-}
-
-export interface ItemApoio {
-  id: number
-  codigo: string | null
-  nome: string
-}
-
-export interface Apoio {
-  regioes: ItemApoio[]
-  assuntos: ItemApoio[]
-  configuracoesMao: ItemApoio[]
-}
-
-export interface VerbeteResumo {
+export interface Submissao {
   id: string
   palavra: string
   acepcao: string
   exemplo: string | null
   classeGramatical: string | null
-  assunto: ItemApoio
-}
-
-export interface SinalResumo {
-  id: string
-  padrao: boolean
-  publicado: boolean
-  regiao: ItemApoio | null
-  configuracaoMao: ItemApoio
-  videoId: string
-  verbete: VerbeteResumo
-}
-
-export interface VideoResumo {
-  id: string
-  url: string
-  formato: string
-  duracaoSeg: number
-  tamanhoMB: number
-}
-
-export interface ConsentimentoResumo {
-  id: string
-  versaoTermo: string
-  dataHora: string
+  assunto: string
+  /** UF da variação regional; null é o sinal padrão nacional. */
+  regiao: string | null
+  configuracaoMao: string
+  video: { url: string; formato: string; duracaoSeg: number; tamanhoMB: number }
   sinalizanteMenor: boolean
-  termoResponsavelEnviado: boolean
-  revogado: boolean
-}
-
-export interface Submissao {
-  id: string
+  versaoTermo: string
+  consentimentoEm: string
   status: StatusSubmissao
   dataEnvio: string
-  autor: Usuario
-  sinal: SinalResumo
-  video: VideoResumo
-  consentimento: ConsentimentoResumo
+  atualizadaEm: string | null
 }
 
 /** Campos do formulário de envio/alteração de sinal. */
@@ -73,9 +27,9 @@ export interface FormularioSubmissao {
   acepcao: string
   exemplo: string
   classeGramatical: string | null
-  assuntoId: number | null
-  regiaoId: number | null
-  configuracaoMaoId: number | null
+  assunto: string | null
+  regiao: string | null
+  configuracaoMao: string | null
   aceiteTermo: boolean
   sinalizanteMenor: boolean
   video: File | null

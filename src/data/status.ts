@@ -12,7 +12,3 @@ const formato = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle
 export function formatarData(iso: string | null | undefined) {
   return iso ? formato.format(new Date(iso)) : '—'
 }
-
-export function nomeRegiao(regiao: { codigo: string | null; nome: string } | null) {
-  return regiao ? `${regiao.nome} (${regiao.codigo})` : 'Nacional'
-}

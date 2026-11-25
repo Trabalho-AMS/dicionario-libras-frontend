@@ -10,9 +10,8 @@ import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
 import { useToast } from 'primevue/usetoast'
 import CabecalhoPagina from '@/components/ui/CabecalhoPagina.vue'
-import { CLASSES_GRAMATICAIS } from '@/data/apoio'
+import { ASSUNTOS, CLASSES_GRAMATICAIS, CONFIGURACOES_MAO, REGIOES } from '@/data/apoio'
 import { submissoesApi } from '@/services/api'
-import { useApoioStore } from '@/stores/apoio'
 import type { FormularioSubmissao, Submissao } from '@/types/api'
 
 // Mesmos limites do backend (Video.validar, RF04)
@@ -23,7 +22,6 @@ const DURACAO_MAXIMA_SEG = 30
 const toast = useToast()
 const rota = useRoute()
 const router = useRouter()
-const apoioStore = useApoioStore()
 
 /** Com id na rota, o formulário corrige uma submissão existente (o vídeo passa a ser opcional). */
 const idEdicao = computed(() => (rota.params.id as string | undefined) ?? null)
@@ -32,16 +30,14 @@ const original = ref<Submissao | null>(null)
 const carregando = ref(false)
 const enviando = ref(false)
 
-const regioes = computed(() => [{ id: null, nome: 'Nacional (sinal padrão)' }, ...apoioStore.apoio.regioes.map((r) => ({ id: r.id, nome: `${r.nome} (${r.codigo})` }))])
-
 const form = reactive<FormularioSubmissao>({
   palavra: '',
-  assuntoId: null,
+  assunto: null,
   classeGramatical: null,
   acepcao: '',
   exemplo: '',
-  regiaoId: null,
-  configuracaoMaoId: null,
+  regiao: null,
+  configuracaoMao: null,
   aceiteTermo: false,
   sinalizanteMenor: false,
   termoResponsavel: null,
@@ -56,9 +52,9 @@ const tentouEnviar = ref(false)
 
 const erros = computed(() => ({
   palavra: !form.palavra.trim() ? 'Informe a palavra em português.' : null,
-  assunto: !form.assuntoId ? 'Escolha um assunto.' : null,
+  assunto: !form.assunto ? 'Escolha um assunto.' : null,
   acepcao: !form.acepcao.trim() ? 'Descreva o significado da palavra.' : null,
-  configuracao: !form.configuracaoMaoId ? 'Escolha a configuração de mão.' : null,
+  configuracao: !form.configuracaoMao ? 'Escolha a configuração de mão.' : null,
   video: erroVideo.value ?? (!form.video && !editando.value ? 'Envie o vídeo do sinal.' : null),
   aceiteTermo: !form.aceiteTermo && !editando.value ? 'É preciso aceitar o termo de uso de imagem.' : null,
   termoResponsavel:
@@ -70,23 +66,22 @@ const erros = computed(() => ({
 const valido = computed(() => Object.values(erros.value).every((e) => e === null))
 
 onMounted(async () => {
-  await apoioStore.carregar()
   if (!idEdicao.value) return
   carregando.value = true
   try {
     const s = await submissoesApi.detalhar(idEdicao.value)
     original.value = s
     Object.assign(form, {
-      palavra: s.sinal.verbete.palavra,
-      acepcao: s.sinal.verbete.acepcao,
-      exemplo: s.sinal.verbete.exemplo ?? '',
-      classeGramatical: s.sinal.verbete.classeGramatical,
-      assuntoId: s.sinal.verbete.assunto.id,
-      regiaoId: s.sinal.regiao?.id ?? null,
-      configuracaoMaoId: s.sinal.configuracaoMao.id,
+      palavra: s.palavra,
+      acepcao: s.acepcao,
+      exemplo: s.exemplo ?? '',
+      classeGramatical: s.classeGramatical,
+      assunto: s.assunto,
+      regiao: s.regiao,
+      configuracaoMao: s.configuracaoMao,
       duracaoSeg: s.video.duracaoSeg,
       aceiteTermo: true,
-      sinalizanteMenor: s.consentimento.sinalizanteMenor,
+      sinalizanteMenor: s.sinalizanteMenor,
     })
     previaVideo.value = s.video.url
   } catch (e) {
@@ -204,7 +199,7 @@ const mostrarErro = (campo: Campo) => tentouEnviar.value && !!erros.value[campo]
     <form class="formulario" novalidate @submit.prevent="enviar">
       <section class="cartao">
         <h2 class="cartao-titulo">1. Verbete</h2>
-        <p class="cartao-subtitulo">Se a palavra já existir, o sinal será enviado como variação regional dela.</p>
+        <p class="cartao-subtitulo">Informe a palavra em português e o que ela significa.</p>
         <div class="grade duas">
           <div class="campo">
             <label for="palavra">Palavra *</label>
@@ -213,7 +208,7 @@ const mostrarErro = (campo: Campo) => tentouEnviar.value && !!erros.value[campo]
           </div>
           <div class="campo">
             <label for="assunto">Assunto *</label>
-            <Select v-model="form.assuntoId" input-id="assunto" :options="apoioStore.apoio.assuntos" option-label="nome" option-value="id" :invalid="mostrarErro('assunto')" placeholder="Selecione" fluid />
+            <Select v-model="form.assunto" input-id="assunto" :options="ASSUNTOS" :invalid="mostrarErro('assunto')" placeholder="Selecione" fluid />
             <small v-if="mostrarErro('assunto')" class="erro">{{ erros.assunto }}</small>
           </div>
           <div class="campo">
@@ -238,11 +233,11 @@ const mostrarErro = (campo: Campo) => tentouEnviar.value && !!erros.value[campo]
         <div class="grade duas">
           <div class="campo">
             <label for="regiao">Região</label>
-            <Select v-model="form.regiaoId" input-id="regiao" :options="regioes" option-label="nome" option-value="id" filter fluid />
+            <Select v-model="form.regiao" input-id="regiao" :options="REGIOES" option-label="nome" option-value="uf" filter fluid />
           </div>
           <div class="campo">
             <label for="cm">Configuração de mão *</label>
-            <Select v-model="form.configuracaoMaoId" input-id="cm" :options="apoioStore.apoio.configuracoesMao" option-label="nome" option-value="id" :invalid="mostrarErro('configuracao')" placeholder="Selecione" fluid />
+            <Select v-model="form.configuracaoMao" input-id="cm" :options="CONFIGURACOES_MAO" :invalid="mostrarErro('configuracao')" placeholder="Selecione" fluid />
             <small v-if="mostrarErro('configuracao')" class="erro">{{ erros.configuracao }}</small>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { Apoio, FormularioSubmissao, Submissao } from '@/types/api'
+import type { FormularioSubmissao, Submissao } from '@/types/api'
 
 // Único ponto de comunicação com o backend.
 export const http = axios.create({
@@ -28,10 +28,6 @@ export const statusApi = {
   verificar: async () => (await http.get<StatusResposta>('/status')).data,
 }
 
-export const dicionarioApi = {
-  apoio: async () => (await http.get<Apoio>('/apoio')).data,
-}
-
 function paraFormData(f: FormularioSubmissao): FormData {
   const dados = new FormData()
   const campos: Record<string, string | number | boolean | null> = {
@@ -39,9 +35,9 @@ function paraFormData(f: FormularioSubmissao): FormData {
     acepcao: f.acepcao,
     exemplo: f.exemplo,
     classeGramatical: f.classeGramatical,
-    assuntoId: f.assuntoId,
-    regiaoId: f.regiaoId,
-    configuracaoMaoId: f.configuracaoMaoId,
+    assunto: f.assunto,
+    regiao: f.regiao,
+    configuracaoMao: f.configuracaoMao,
     duracaoSeg: f.duracaoSeg,
     aceiteTermo: f.aceiteTermo,
     sinalizanteMenor: f.sinalizanteMenor,
